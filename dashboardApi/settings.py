@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -68,8 +69,14 @@ WSGI_APPLICATION = 'dashboardApi.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE' : 'django.db.backends.postgresql_psycopg2',
+        'NAME' : 'k12',
+        'USER' : 'postgres',
+        'PASSWORD': '1234',
+        'HOST':'localhost',
+        'PORT':'5432'
     }
 }
 
@@ -127,3 +134,5 @@ CORS_ORIGIN_WHITELIST = [
 ]
 AUTH_USER_MODEL = 'k12Api.Users'
 CORS_ALLOW_CREDENTIALS = True
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

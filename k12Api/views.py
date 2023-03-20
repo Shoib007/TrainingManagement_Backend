@@ -1,7 +1,10 @@
+import os
 from django.shortcuts import render, redirect
+from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from .Serializer import TrainerDetailSerializer, TrainingSerializer, schoolDetailSerializer, userSerializer
 from .models import TrainerDetails, TrainingDetails, schoolDetail
@@ -20,17 +23,32 @@ def Home(request):
 @api_view(['POST', 'GET'])
 def TrainerDetail(request):
     if request.method == 'POST':
-        serTrainerData = TrainerDetailSerializer(data=request.data)
-        if serTrainerData.is_valid():
-            serTrainerData.save()
-        else:
-            return Response({'Error': serTrainerData.errors})
-        return Response(serTrainerData.data)
-
+        data = request.data
+        hashPass = make_password(data['email'])
+        ######### Creating User ###########
+        user = Users.objects.create(
+            name = data['fname'],
+            email = data['email'],
+            password = hashPass,
+            phoneNumber = data['contact'],
+        )
+        ######### Saving Trainer data ##########
+        trainer = TrainerDetails.objects.create(
+            user = user,
+            fname = data['fname'],
+            contact = data['contact'],
+            trainerLink = data['trainerLink'],
+            email = data['email'],
+            trainer_type = data['trainer_type'],
+            department = data['department'],
+        )
+        return Response({"status":200})
+    
     if request.method == 'GET':
         trainerData = TrainerDetails.objects.all()
         serializeTrainingData = TrainerDetailSerializer(trainerData, many=True)
         return Response(serializeTrainingData.data)
+
 
 ########################################### GET, PUT, DELETE Request based on ID #############################################################
 
@@ -76,6 +94,55 @@ def TrainingDetail(request):
         serializeTraining = TrainingSerializer(trainingsObj, many=True)
         return Response(serializeTraining.data)
 
+########################### Updating Training's State ####################################
+
+# @api_view(['GET','PUT'])
+# def updateTraining(request, id):
+#     if request.method == 'PUT':
+#         tdata = TrainingDetails.objects.get(pk=id)
+#         Serialized = TrainingSerializer(tdata, data = request.data)
+#         if Serialized.is_valid():
+#             Serialized.save()
+#             return Response(Serialized.data)
+#         return Response(Serialized.errors)
+#     if request.method == 'GET':
+#         data = TrainingDetails.objects.get(id=id)
+#         training = TrainingSerializer(data)
+#         return Response(training.data)
+
+@api_view(['PUT','GET'])
+def trainingUpdate(request, tID):
+    if request.method == 'PUT':
+        training = TrainingDetails.objects.get(id=tID)
+        if len(request.data) > 3:
+            updateTraining = TrainingSerializer(training, data=request.data)
+            if updateTraining.is_valid():
+                return Response("Training Updated")
+            return Response(updateTraining.errors)
+        else:
+            training.state = request.data['state']
+            print("Training Updated")
+        training.save();
+        return Response("State updated")
+    if request.method == 'GET':
+        training = TrainingDetails.objects.get(id=tID)
+        serTraining = TrainingSerializer(training)
+        data = serTraining.data
+        data['trainerName'] = training.trainerName.fname
+        data['TrainingDate'] = training.TrainingDate.strftime('%m/%d/%Y')
+        return Response(serTraining.data)
+
+
+
+
+############################## Specific Training Data ##########################################
+
+@api_view(["GET"])
+def trainerTrainingData(request, trainer_id):
+    training = TrainingDetails.objects.filter(trainerName__user_id= trainer_id)
+    serTraining = TrainingSerializer(training, many=True)
+    return Response(serTraining.data)
+
 
 ############################################ Post and Get Request Function for School #########################################################
 
@@ -95,7 +162,7 @@ def schoolData(request):
         return Response(serializedSchool.data)
 
 
-############################################ GET, DELETE and PUT based on ID #########################################################
+############################################ School GET, DELETE and PUT based on ID #########################################################
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def schoolDataOperations(request, id):
@@ -119,19 +186,10 @@ def schoolDataOperations(request, id):
         return Response({'Message': 'Data has been deleted'})
 
 
-########################################## For User Register ######################################################
 
-@api_view(['POST'])
-def userRegister(request):
-    user = userSerializer(data=request.data)
-    if user.is_valid():
-        user.save()
-    else:
-        return Response(user.errors)
-    return Response(user.data)
     
 
-###################################### For user Authentication and Login #################################
+###################################### For user Authentication and Register and Login #################################
 @api_view(['POST','GET'])
 def userLogin(request):
     if request.method == 'POST':
@@ -170,8 +228,28 @@ def userLogin(request):
             raise AuthenticationFailed('Unauthenticated')
         
         user = Users.objects.filter(id=payload['id']).first()
-        userData = userSerializer(user)
+        userData = userSerializer(user, context={'request':request})
         return Response(userData.data)
+
+@api_view(['PUT'])
+def updateUser(request, userId):
+    userData = Users.objects.get(id=userId)
+    try:
+        if 'profile' in request.FILES:
+            # first delete old image
+            old_profile_path = userData.profile.path
+            if os.path.exists(old_profile_path):
+                os.remove(old_profile_path)
+            #set new image now
+            userData.profile = request.FILES['profile']
+            userData.save()
+            return Response("No issue")
+        else:
+            return Response("No image found")
+    except Exception as e:
+        return Response({"error":str(e)})
+    
+   
 
 ################################ Handelling Logout #####################################
 @api_view(['POST'])

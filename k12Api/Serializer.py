@@ -26,12 +26,20 @@ class schoolDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class userSerializer(serializers.ModelSerializer):
+    profile_url = serializers.SerializerMethodField()
     class Meta:
         model = Users
-        fields = ['id', 'name','email','password','phoneNumber','is_staff']
+        fields = ['id', 'name','email','password','phoneNumber','is_staff','profile_url']
         extra_kwargs = {
             'password':{'write_only':True}
         }
+    
+    def get_profile_url(self, obj):
+        request = self.context.get('request')
+        if obj.profile:
+            return request.build_absolute_uri(obj.profile.url)
+        else:
+            return None
 
     def create(self, validated_data):
         password = validated_data.pop('password',None)
