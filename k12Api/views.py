@@ -11,8 +11,6 @@ from .models import TrainerDetails, TrainingDetails, schoolDetail
 from .models import Users
 import jwt, datetime
 
-# Create your views here.
-
 
 def Home(request):
     return HttpResponse("I'm Home")
@@ -96,24 +94,14 @@ def TrainingDetail(request):
 
 ########################### Updating Training's State ####################################
 
-# @api_view(['GET','PUT'])
-# def updateTraining(request, id):
-#     if request.method == 'PUT':
-#         tdata = TrainingDetails.objects.get(pk=id)
-#         Serialized = TrainingSerializer(tdata, data = request.data)
-#         if Serialized.is_valid():
-#             Serialized.save()
-#             return Response(Serialized.data)
-#         return Response(Serialized.errors)
-#     if request.method == 'GET':
-#         data = TrainingDetails.objects.get(id=id)
-#         training = TrainingSerializer(data)
-#         return Response(training.data)
 
 @api_view(['PUT','GET'])
 def trainingUpdate(request, tID):
     if request.method == 'PUT':
         training = TrainingDetails.objects.get(id=tID)
+        schoolID = training.schoolName.id                   # Getting school ID of this training
+        school = schoolDetail.objects.get(id= schoolID)     # getting that particular school data based on id
+
         if len(request.data) > 3:
             updateTraining = TrainingSerializer(training, data=request.data)
             if updateTraining.is_valid():
@@ -121,8 +109,11 @@ def trainingUpdate(request, tID):
             return Response(updateTraining.errors)
         else:
             training.state = request.data['state']
+            school.state = request.data['state']
             print("Training Updated")
-        training.save();
+        training.save()
+        school.save()
+        
         return Response("State updated")
     if request.method == 'GET':
         training = TrainingDetails.objects.get(id=tID)
@@ -184,9 +175,6 @@ def schoolDataOperations(request, id):
     elif request.method == 'DELETE':
         schoolObj.delete()
         return Response({'Message': 'Data has been deleted'})
-
-
-
     
 
 ###################################### For user Authentication and Register and Login #################################
@@ -195,7 +183,6 @@ def userLogin(request):
     if request.method == 'POST':
         email = request.data['email']
         password = request.data['password']
-
         user = Users.objects.filter(email=email).first()
         if user is None:
             raise AuthenticationFailed("User not Found")
@@ -240,8 +227,10 @@ def updateUser(request, userId):
             old_profile_path = userData.profile.path
             if os.path.exists(old_profile_path):
                 os.remove(old_profile_path)
+
             #set new image now
             userData.profile = request.FILES['profile']
+            print(userData.profile.path)
             userData.save()
             return Response("No issue")
         else:

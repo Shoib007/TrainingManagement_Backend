@@ -6,6 +6,7 @@ from django.contrib.postgres.fields import ArrayField
 
 #In this way you can store the profile picture arrange as per the user name folder.
 def picturePath(instance, filename):
+    print(instance)
     return os.path.join('profile',str(instance.name), filename)
 
 
@@ -15,7 +16,7 @@ class Users(AbstractUser):
     email = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     phoneNumber = models.BigIntegerField(default=91, null=True)
-    profile = models.ImageField(upload_to=picturePath, null=True, blank=True)
+    profile = models.ImageField(upload_to='profile', null=True, blank=True)
     username = None
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -39,7 +40,9 @@ class schoolDetail(models.Model):
     am = models.CharField(max_length=255)
     om = models.CharField(max_length=255)
     catagory = models.CharField(max_length=255)
-    # grades = ArrayField(models.CharField(max_length=512, blank=True), blank=True, null=True)
+    state = models.CharField(max_length=255, null=True, blank=True)
+    subject = models.CharField(max_length=255, null=True, blank=True)
+    grades = ArrayField(models.CharField(max_length=512, blank=True), blank=True, null=True)
 
 ############################# Training's Table ####################################
 class TrainingDetails(models.Model):
@@ -49,6 +52,6 @@ class TrainingDetails(models.Model):
     startTime = models.TimeField()
     endTime = models.TimeField()
     TrainingDate = models.DateField()
-    state = models.CharField(max_length=20, default="pending")
+    state = models.CharField(max_length=20, default="On Going")
     def __str__(self):
         return f"{self.TrainingDate}"
