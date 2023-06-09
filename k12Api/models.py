@@ -42,7 +42,7 @@ class schoolDetail(models.Model):
     catagory = models.CharField(max_length=255)
     state = models.CharField(max_length=255, null=True, blank=True)
     subject = models.CharField(max_length=255, null=True, blank=True)
-    grades = ArrayField(models.CharField(max_length=512, blank=True), blank=True, null=True)
+    # grades = ArrayField(models.CharField(max_length=512, blank=True), blank=True, null=True)
 
 ############################# Training's Table ####################################
 class TrainingDetails(models.Model):
