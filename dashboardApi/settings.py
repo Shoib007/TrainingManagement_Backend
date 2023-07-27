@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g11y%=+jwmc@dj1b(&l#^gu^k3kxrrl0%*8jjafwmn@4=94vhq'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -71,12 +72,12 @@ DATABASES = {
     'default': {
         # 'ENGINE': 'django.db.backends.sqlite3',
         # 'NAME': BASE_DIR / 'db.sqlite3',
-        'ENGINE' : 'django.db.backends.postgresql_psycopg2',
-        'NAME' : 'k12',
-        'USER' : 'postgres',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'k12',
+        'USER': 'postgres',
         'PASSWORD': '1234',
-        'HOST':'localhost',
-        'PORT':'5432'
+        'HOST': 'localhost',
+        'PORT': '5432'
     }
 }
 
@@ -122,16 +123,19 @@ STATIC_URL = 'static/'
 
 # CORS_ALLOWED_ORIGINS = [
 #     'http://localhost:3000',
+#     'http://localhost:3001',
 # ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = False
-CORS_ALLOW_CREDENTIALS = True
+
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://127.0.0.1:3001',
     'http://127.0.0.1:5500',
 ]
+
 AUTH_USER_MODEL = 'k12Api.Users'
 CORS_ALLOW_CREDENTIALS = True
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
